@@ -1,0 +1,368 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NvChad Bindings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* dark-first: bare :root is the dark palette */
+  :root {
+    --bg: #14161b;
+    --surface: #1c1f26;
+    --surface-2: #232733;
+    --border: #2c313d;
+    --text: #c8ceda;
+    --text-dim: #828a9a;
+    --accent: #6d9ee8;
+    --leader: #9ac67e;
+    --key-bg: #262b36;
+    --key-border: #3a4150;
+    --key-text: #dbe1ec;
+    --mode-bg: #2d2536;
+    --mode-text: #c49ae0;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f5f8;
+      --surface: #ffffff;
+      --surface-2: #eceef3;
+      --border: #dcdfe7;
+      --text: #2a2e38;
+      --text-dim: #6b7280;
+      --accent: #3b6fc9;
+      --leader: #4d7c33;
+      --key-bg: #eef0f5;
+      --key-border: #c9cdd8;
+      --key-text: #363b47;
+      --mode-bg: #efe6f7;
+      --mode-text: #7c48a8;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f5f8;
+    --surface: #ffffff;
+    --surface-2: #eceef3;
+    --border: #dcdfe7;
+    --text: #2a2e38;
+    --text-dim: #6b7280;
+    --accent: #3b6fc9;
+    --leader: #4d7c33;
+    --key-bg: #eef0f5;
+    --key-border: #c9cdd8;
+    --key-text: #363b47;
+    --mode-bg: #efe6f7;
+    --mode-text: #7c48a8;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px 60px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0 14px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  h1 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  h1 .tilde { color: var(--accent); }
+  .leader-note {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px; color: var(--text-dim); white-space: nowrap;
+  }
+  .leader-note b { color: var(--leader); font-weight: 600; }
+
+  .search {
+    flex: 1; min-width: 180px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search .prompt { color: var(--accent); font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+  .search input {
+    flex: 1; min-width: 0;
+    background: none; border: none; outline: none;
+    color: var(--text);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13px;
+  }
+  .search input::placeholder { color: var(--text-dim); }
+
+  .copy-btn {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px; font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .cols { columns: 3; column-gap: 20px; }
+  @media (max-width: 900px) { .cols { columns: 2; } }
+  @media (max-width: 600px) { .cols { columns: 1; } }
+
+  section {
+    break-inside: avoid;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px 8px;
+    margin: 0 0 20px;
+  }
+  h2 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.09em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 5px 0;
+    border-top: 1px solid var(--border);
+  }
+  .row:first-of-type { border-top: none; }
+  .keys { white-space: nowrap; }
+  kbd {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px; font-weight: 500;
+    color: var(--key-text);
+    background: var(--key-bg);
+    border: 1px solid var(--key-border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 5px;
+    display: inline-block;
+  }
+  kbd.ldr { color: var(--leader); border-color: var(--leader); background: transparent; }
+  .desc { color: var(--text-dim); text-align: right; }
+  .mode {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px; font-weight: 600;
+    color: var(--mode-text); background: var(--mode-bg);
+    border-radius: 3px; padding: 1px 4px;
+    vertical-align: 1px; margin-left: 4px;
+  }
+  .hidden { display: none; }
+  .no-results {
+    display: none;
+    text-align: center; color: var(--text-dim);
+    font-family: "IBM Plex Mono", monospace; font-size: 13px;
+    padding: 40px 0;
+  }
+  footer {
+    margin-top: 8px;
+    font-size: 12px; color: var(--text-dim);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="tilde">~</span>/nvchad bindings</h1>
+    <span class="leader-note">leader = <b>Space</b></span>
+    <div class="search">
+      <span class="prompt">/</span>
+      <input id="filter" type="text" placeholder="filter bindings…" aria-label="Filter bindings">
+    </div>
+    <button class="copy-btn" id="copyMd">Copy as Markdown</button>
+  </header>
+
+  <div class="cols" id="sheet">
+
+    <section>
+      <h2>Files &amp; Search</h2>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>f</kbd></span><span class="desc">find files</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>w</kbd></span><span class="desc">live grep (global search)</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>z</kbd></span><span class="desc">fuzzy find in buffer</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>a</kbd></span><span class="desc">find all (hidden + ignored)</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>b</kbd></span><span class="desc">find buffers</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>o</kbd></span><span class="desc">recent files</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>h</kbd></span><span class="desc">help tags</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>m</kbd> <kbd>a</kbd></span><span class="desc">marks</span></div>
+    </section>
+
+    <section>
+      <h2>Sidebar</h2>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>n</kbd></span><span class="desc">toggle file tree</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>e</kbd></span><span class="desc">focus file tree</span></div>
+    </section>
+
+    <section>
+      <h2>Buffers &amp; Windows</h2>
+      <div class="row"><span class="keys"><kbd>Tab</kbd> / <kbd>Shift</kbd> <kbd>Tab</kbd></span><span class="desc">next / prev buffer</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>x</kbd></span><span class="desc">close buffer</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>b</kbd></span><span class="desc">new buffer</span></div>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd></span><span class="desc">move between windows</span></div>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>s</kbd></span><span class="desc">save file</span></div>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>c</kbd></span><span class="desc">copy whole file</span></div>
+    </section>
+
+    <section>
+      <h2>LSP</h2>
+      <div class="row"><span class="keys"><kbd>g</kbd> <kbd>d</kbd></span><span class="desc">go to definition</span></div>
+      <div class="row"><span class="keys"><kbd>g</kbd> <kbd>D</kbd></span><span class="desc">go to declaration</span></div>
+      <div class="row"><span class="keys"><kbd>g</kbd> <kbd>i</kbd></span><span class="desc">go to implementation</span></div>
+      <div class="row"><span class="keys"><kbd>g</kbd> <kbd>r</kbd></span><span class="desc">references</span></div>
+      <div class="row"><span class="keys"><kbd>K</kbd></span><span class="desc">hover docs</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>r</kbd> <kbd>a</kbd></span><span class="desc">rename symbol</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>c</kbd> <kbd>a</kbd><span class="mode">n·v</span></span><span class="desc">code action</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd> <kbd>m</kbd></span><span class="desc">format buffer</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>l</kbd> <kbd>s</kbd></span><span class="desc">signature help</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>D</kbd></span><span class="desc">type definition</span></div>
+    </section>
+
+    <section>
+      <h2>Diagnostics</h2>
+      <div class="row"><span class="keys"><kbd>[</kbd> <kbd>d</kbd> / <kbd>]</kbd> <kbd>d</kbd></span><span class="desc">prev / next diagnostic</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>f</kbd></span><span class="desc">floating diagnostic</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>q</kbd></span><span class="desc">diagnostics → loclist</span></div>
+    </section>
+
+    <section>
+      <h2>Git</h2>
+      <div class="row"><span class="keys"><kbd>[</kbd> <kbd>c</kbd> / <kbd>]</kbd> <kbd>c</kbd></span><span class="desc">prev / next hunk</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>p</kbd> <kbd>h</kbd></span><span class="desc">preview hunk</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>r</kbd> <kbd>h</kbd></span><span class="desc">reset hunk</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>g</kbd> <kbd>b</kbd></span><span class="desc">blame line</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>t</kbd> <kbd>d</kbd></span><span class="desc">toggle deleted</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>c</kbd> <kbd>m</kbd></span><span class="desc">git commits (telescope)</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>g</kbd> <kbd>t</kbd></span><span class="desc">git status (telescope)</span></div>
+    </section>
+
+    <section>
+      <h2>Terminals</h2>
+      <div class="row"><span class="keys"><kbd>Alt</kbd> <kbd>i</kbd></span><span class="desc">toggle floating term</span></div>
+      <div class="row"><span class="keys"><kbd>Alt</kbd> <kbd>h</kbd> / <kbd>Alt</kbd> <kbd>v</kbd></span><span class="desc">toggle horiz / vert term</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>h</kbd> / <kbd class="ldr">Spc</kbd> <kbd>v</kbd></span><span class="desc">new horiz / vert term</span></div>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>x</kbd><span class="mode">t</span></span><span class="desc">escape terminal mode</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>p</kbd> <kbd>t</kbd></span><span class="desc">pick hidden term</span></div>
+    </section>
+
+    <section>
+      <h2>Editing</h2>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>/</kbd><span class="mode">n·v</span></span><span class="desc">toggle comment</span></div>
+      <div class="row"><span class="keys"><kbd>&lt;</kbd> / <kbd>&gt;</kbd><span class="mode">v</span></span><span class="desc">indent, keep selection</span></div>
+      <div class="row"><span class="keys"><kbd>p</kbd><span class="mode">v</span></span><span class="desc">paste w/o yanking replaced</span></div>
+      <div class="row"><span class="keys"><kbd>Esc</kbd></span><span class="desc">clear search highlight</span></div>
+      <div class="row"><span class="keys"><kbd>;</kbd></span><span class="desc">command mode (custom)</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>c</kbd> <kbd>c</kbd></span><span class="desc">jump to current context</span></div>
+    </section>
+
+    <section>
+      <h2>Insert Mode</h2>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>b</kbd> / <kbd>Ctrl</kbd> <kbd>e</kbd><span class="mode">i</span></span><span class="desc">start / end of line</span></div>
+      <div class="row"><span class="keys"><kbd>Ctrl</kbd> <kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd><span class="mode">i</span></span><span class="desc">move cursor</span></div>
+    </section>
+
+    <section>
+      <h2>UI &amp; Help</h2>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>c</kbd> <kbd>h</kbd></span><span class="desc">built-in cheatsheet</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>w</kbd> <kbd>K</kbd></span><span class="desc">which-key: all keymaps</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>t</kbd> <kbd>h</kbd></span><span class="desc">theme picker</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>n</kbd></span><span class="desc">toggle line numbers</span></div>
+      <div class="row"><span class="keys"><kbd class="ldr">Spc</kbd> <kbd>r</kbd> <kbd>n</kbd></span><span class="desc">toggle relative numbers</span></div>
+    </section>
+
+  </div>
+
+  <div class="no-results" id="noResults">no matches — <kbd>Esc</kbd> to clear</div>
+
+  <footer>source: ~/.config/nvim (NvChad) · press / to filter · modes: n unless tagged (v visual · i insert · t terminal)</footer>
+</div>
+
+<script>
+  var filter = document.getElementById('filter');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('#sheet section'));
+  var noResults = document.getElementById('noResults');
+
+  function applyFilter() {
+    var q = filter.value.trim().toLowerCase();
+    var any = false;
+    sections.forEach(function (sec) {
+      var secVisible = false;
+      var rows = sec.querySelectorAll('.row');
+      rows.forEach(function (row) {
+        var match = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+        row.classList.toggle('hidden', !match);
+        if (match) secVisible = true;
+      });
+      sec.classList.toggle('hidden', !secVisible);
+      if (secVisible) any = true;
+    });
+    noResults.style.display = any ? 'none' : 'block';
+  }
+  filter.addEventListener('input', applyFilter);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== filter) {
+      e.preventDefault();
+      filter.focus();
+    } else if (e.key === 'Escape' && document.activeElement === filter) {
+      filter.value = '';
+      applyFilter();
+      filter.blur();
+    }
+  });
+
+  document.getElementById('copyMd').addEventListener('click', function () {
+    var btn = this;
+    var lines = ['# NvChad Bindings', '', 'Leader = Space. Mode is normal unless tagged.', ''];
+    sections.forEach(function (sec) {
+      lines.push('## ' + sec.querySelector('h2').textContent);
+      lines.push('');
+      lines.push('| Keys | Action |');
+      lines.push('|---|---|');
+      sec.querySelectorAll('.row').forEach(function (row) {
+        var keys = [];
+        row.querySelectorAll('.keys kbd').forEach(function (k) { keys.push('`' + k.textContent + '`'); });
+        var modeEl = row.querySelector('.mode');
+        var mode = modeEl ? ' _(' + modeEl.textContent + ')_' : '';
+        lines.push('| ' + keys.join(' ') + mode + ' | ' + row.querySelector('.desc').textContent + ' |');
+      });
+      lines.push('');
+    });
+    var text = lines.join('\n');
+
+    function done(ok) {
+      btn.textContent = ok ? 'Copied!' : 'Copy failed';
+      setTimeout(function () { btn.textContent = 'Copy as Markdown'; }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallback(text)); });
+    } else {
+      done(fallback(text));
+    }
+    function fallback(t) {
+      var ta = document.createElement('textarea');
+      ta.value = t;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(ta);
+      return ok;
+    }
+  });
+</script>
